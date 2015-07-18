@@ -1,0 +1,24 @@
+[root]
+name = "csvsql"
+version = "0.0.1"
+dependencies = [
+ "bit-vec 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "peg 0.3.0 (git+https://github.com/kevinmehall/rust-peg.git)",
+ "simple_csv 0.0.15 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "bit-vec"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "peg"
+version = "0.3.0"
+source = "git+https://github.com/kevinmehall/rust-peg.git#fc49125552f43509c7c5a87ee094a592152f3231"
+
+[[package]]
+name = "simple_csv"
+version = "0.0.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+

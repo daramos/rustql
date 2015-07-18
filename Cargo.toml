@@ -1,0 +1,14 @@
+[package]
+
+name = "csvsql"
+version = "0.0.1"
+authors = ["Daniel Ramos <dan@daramos.com>"]
+
+
+
+[dependencies]
+simple_csv = "^0"
+bit-vec = "^0"
+
+[dependencies.peg]
+git = "https://github.com/kevinmehall/rust-peg.git"

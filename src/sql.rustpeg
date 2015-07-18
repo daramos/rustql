@@ -1,0 +1,151 @@
+use definitions::*;
+use  std::ascii::OwnedAsciiExt;
+#[pub]
+
+sql_expression -> SqlStmt
+    = s:_sql_expression __* { s }
+
+_sql_expression -> SqlStmt
+    = s:select_stmt
+        { SqlStmt::Select(s) }
+    / dump_tables_stmt
+        { SqlStmt::DumpTables }
+    / t:create_table_stmt
+        { SqlStmt::CreateTable(t) }
+    / t:drop_table_stmt
+        { SqlStmt::DropTable(t) }
+    / i:insert_stmt
+        { SqlStmt::Insert(i) }
+
+create_table_stmt -> CreateTableStmt
+    = CREATE __ TABLE __ t:valid_identifier __* "(" __* c:(column_def ++ list_separator) __* ")"
+        {
+            CreateTableStmt{
+                table_name: t,
+                column_defs: c
+            }
+        }
+
+drop_table_stmt -> DropTableStmt
+    = DROP __ TABLE __ t:valid_identifier __*
+        {
+            DropTableStmt{
+                table_name: t
+            }
+        }
+
+insert_stmt -> InsertStmt
+    = INSERT __ INTO __ t:valid_identifier __*
+        "(" __* c:(valid_identifier ++ list_separator) __* ")" __
+        VALUES __* "(" __* v:(literal_value ++ list_separator) __* ")"
+            {
+                InsertStmt {
+                    table_name: t,
+                    column_names: c,
+                    column_values: v
+                }
+            }
+
+column_def -> ColumnDefinition
+    = n:valid_identifier __ t:column_type
+        {
+            ColumnDefinition {
+                name: n,
+                ctype: t
+            }
+        }
+
+column_type -> ColumnType
+    = TEXT { ColumnType::Text }
+    / BOOL { ColumnType::Bool }
+
+select_stmt -> SelectStmt
+    = SELECT __ p:select_projection_clause __ FROM __ f:select_from_clause w:select_where_clause?
+        { SelectStmt{projection: p, from: f, filter: w.unwrap_or(Vec::new())} }
+
+dump_tables_stmt
+    = DUMP __ TABLES
+
+select_projection_clause -> SelectProjection
+    = "*"
+        { SelectProjection::Wildcard }
+    / c:(select_projection_column ++ list_separator)
+        { SelectProjection::Columns(c) }
+
+select_projection_column -> SelectProjectionColumn
+    = /*l:literal_value
+        { SelectProjectionColumn::LiteralValue(l) }
+    /*/ c: valid_identifier
+        { SelectProjectionColumn::Named(c) }
+
+
+select_from_clause -> Vec<SelectFromTable>
+    =  (select_from_identifier ++ list_separator)
+
+select_from_identifier -> SelectFromTable
+    = f:function_call
+        { SelectFromTable::Function(f) }
+    / t:valid_identifier
+        { SelectFromTable::NamedTable(t) }
+
+select_where_clause -> Vec<SelectWhereFilter>
+    = __ WHERE __ w:(select_where_filter ++ (AND __))
+        { w }
+
+
+select_where_filter -> SelectWhereFilter
+    = l:valid_identifier __* c:comparator __* r:valid_identifier
+        { SelectWhereFilter::ColumnColumn(l,c,r) }
+    / l:valid_identifier __* c:comparator __* r:literal_value
+        { SelectWhereFilter::ColumnLiteral(l,c,r) }
+
+comparator -> Comparator
+    = "=" { Comparator::Equals }
+
+function_call -> FunctionCall
+    = f:valid_identifier __* "(" __* a:(function_argument ++ list_separator) __* ")"
+        {
+            FunctionCall{
+                function_name: f,
+                arguments: a
+            }
+        }
+
+function_argument -> FunctionArgument
+    = l:literal_value { FunctionArgument::LiteralValue(l) }
+    / i:valid_identifier { FunctionArgument::Identifier(i) }
+
+valid_identifier -> String
+    = [a-zA-Z][0-9a-zA-Z_]* { match_str.to_string().into_ascii_lowercase() }
+
+
+literal_value -> LiteralValue
+    = string_literal
+    / boolean_literal
+
+string_literal -> LiteralValue
+    = "'" [^']* "'" { LiteralValue::Text(match_str[1..match_str.len()-1].to_string()) }
+
+boolean_literal -> LiteralValue
+    = TRUE { LiteralValue::Bool(true) }
+    / FALSE { LiteralValue::Bool(false) }
+
+__ = [ \n\r]+
+list_separator = __* "," __*
+
+SELECT = "SELECT"i
+DUMP = "DUMP"i
+TABLES = "TABLES"i
+FROM = "FROM"i
+WHERE = "WHERE"i
+DROP = "DROP"i
+AND = "AND"i
+TRUE = "TRUE"i
+FALSE = "FALSE"i
+CREATE = "CREATE"i
+TABLE = "TABLE"i
+TEXT = "TEXT"i
+BOOL = "BOOL"i
+INSERT = "INSERT"i
+INTO = "INTO"i
+VALUES = "VALUES"i

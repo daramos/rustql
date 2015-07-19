@@ -36,9 +36,11 @@ pub fn build_insert_plan(insert_ir: &InsertIr, schema: &Schema) -> SqlError<Inse
         Ok(table.columns().len())
     }));
     let mut row: Vec<LiteralValue> = repeat(LiteralValue::Null).take(table_col_len).collect();
-    let cur_index = 0;
+    let mut cur_index = 0;
+
     for val in insert_ir.values.iter() {
-        row[insert_ir.columns[cur_index].column_index] = val.clone()
+        row[insert_ir.columns[cur_index].column_index] = val.clone();
+        cur_index += 1;
     }
 
     let static_row = StaticRow {

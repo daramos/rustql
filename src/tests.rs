@@ -3,7 +3,7 @@ pub mod tests {
     use sql_parse::sql_expression;
     use definitions::*;
     use engine::*;
-    
+
     #[test]
     fn parser_select() {
         // Base test
@@ -17,10 +17,10 @@ pub mod tests {
         let mut where_stmt = stmt.clone();
         where_stmt.filter = vec![SelectWhereFilter::ColumnLiteral("dummy".to_string(),Comparator::Equals,LiteralValue::Text("X".to_string()))];
         assert_eq!(sql_expression("SELECT * FROM DUAL WHERE dummy = 'X'"), Ok(SqlStmt::Select(where_stmt)));
-        
+
         stmt.projection = SelectProjection::Columns(vec![SelectProjectionColumn::Named("my_column1".to_string()),SelectProjectionColumn::Named("my_column2".to_string())]);
         assert_eq!(sql_expression("SELECT my_column1,my_column2 FROM DUAL"), Ok(SqlStmt::Select(stmt.clone())));
-        
+
         stmt.from = vec![SelectFromTable::Function(
                 FunctionCall{
                     function_name: "csv_table".to_string(),
@@ -35,7 +35,7 @@ pub mod tests {
                 }
             )];
         assert_eq!(sql_expression("SELECT my_column1,my_column2 FROM csv_table('my_table.csv',true)"), Ok(SqlStmt::Select(stmt.clone())));
-        
+
     }
 
     #[test]
@@ -51,16 +51,20 @@ pub mod tests {
         };
         assert_eq!(sql_expression("create table test_table_1(test_column1 text)"), Ok(SqlStmt::CreateTable(stmt.clone())));
     }
-    
+
     #[test]
     fn create_table_insert_select() {
         let mut engine = SqlEngine::new();
-        engine.excecute_stmt(sql_expression("CREATE TABLE ABC(COL1 BOOL)").unwrap()).unwrap();
-        engine.excecute_stmt(sql_expression("INSERT INTO ABC(COL1) VALUES (TRUE)").unwrap()).unwrap();
+        engine.excecute_stmt(sql_expression("CREATE TABLE ABC(COL1 BOOL, COL2 BOOL)").unwrap()).unwrap();
+        engine.excecute_stmt(sql_expression("INSERT INTO ABC(COL1, COL2) VALUES (TRUE, FALSE)").unwrap()).unwrap();
+        assert!(engine.excecute_stmt(sql_expression("INSERT INTO ABC(COL1, COL2) VALUES (TRUE)").unwrap()).is_err());
+        assert!(engine.excecute_stmt(sql_expression("INSERT INTO ABC(COL1) VALUES (TRUE,FALSE)").unwrap()).is_err());
+        assert!(engine.excecute_stmt(sql_expression("INSERT INTO ABC(COL1,COL1) VALUES (TRUE,FALSE)").unwrap()).is_err());
+
         let result = engine.excecute_stmt(sql_expression("SELECT * FROM ABC").unwrap()).unwrap();
-        let expected_result = SqlResult::Rows(vec![vec![LiteralValue::Bool(true)]]);
+        let expected_result = SqlResult::Rows(vec![vec![LiteralValue::Bool(true), LiteralValue::Bool(false)]]);
         assert_eq!(result,expected_result);
-        
+
     }
 
 }

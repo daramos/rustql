@@ -20,41 +20,41 @@ impl MemoryTable {
             rows_status: BitVec::new()
         }
     }
-    
+
     pub fn columns(&self) -> &[ColumnDefinition] {
         &self.column_defs[..]
     }
-    
+
     pub fn raw_len(&self) -> usize {
         self.rows_status.len()
     }
-    
+
     pub fn len(&self) -> usize {
         self.rows_status.iter().filter(|x| *x).count()
     }
-    
+
     pub fn add_column(&mut self, column_def: ColumnDefinition) {
         self.column_defs.push(column_def);
-        
+
         // Add new column, fill with Null for all existing rows
         let nulls = repeat(LiteralValue::Null).take(self.raw_len()).collect();
         self.columns_data.push(nulls);
     }
-    
+
     pub fn insert_row(&mut self, mut row: Vec<LiteralValue>) -> SqlError<RowId> {
         let num_columns = row.len();
         if num_columns != self.column_defs.len() {
             return Err("Wrong number of columns for table".to_string());
         }
-        
+
         for (dst, col) in self.columns_data.iter_mut().zip(row.drain(..)) {
             dst.push(col)
         }
         self.rows_status.push(true);
-        
+
         return Ok(self.raw_len()-1);
     }
-    
+
     pub fn get_row(&self, rowid: RowId) -> SqlError<Vec<LiteralValue>> {
         match self.rows_status.get(rowid) {
             None => { Err(format!("Row {} doesn't exist", rowid)) },
@@ -68,14 +68,14 @@ impl MemoryTable {
             }
         }
     }
-    
+
     pub fn rowid_iter(&self) -> RowIdIterator {
         RowIdIterator {
             bit_vec: self.rows_status.clone(),
             next_rowid: 0
         }
     }
-    
+
     pub fn get_row_col(&self, rowid: RowId, column_id: usize) -> Option<&LiteralValue> {
         self.columns_data.get(column_id).and_then(|x| x.get(rowid))
     }
@@ -118,15 +118,15 @@ mod tests {
                 name: "test_column".to_string()
             }
         ];
-        
+
         let mut table = MemoryTable::new();
         for col in column_defs.drain(..) {
             table.add_column(col);
         }
         table
     }
-    
-    
+
+
     #[test]
     fn memory_table() {
         let mut mt = create_table();
@@ -134,8 +134,8 @@ mod tests {
         let row_id = mt.insert_row(row_vec.clone()).unwrap();
         let mut row_ret = mt.get_row(row_id);
         assert_eq!(Ok(row_vec.clone()),row_ret);
-        
-        mt.add_column( 
+
+        mt.add_column(
             ColumnDefinition {
                 ctype: ColumnType::Text,
                 name: "test_column2".to_string()
@@ -143,7 +143,7 @@ mod tests {
         );
         row_vec.push(LiteralValue::Null);
         row_ret = mt.get_row(row_id);
-        
+
         assert_eq!(Ok(row_vec.clone()),row_ret);
     }
 }

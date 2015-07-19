@@ -26,16 +26,9 @@ fn find_table_references(table_names: &[String], schema: &Schema) -> SqlError<Ve
     let mut refs = Vec::new();
 
     for name in table_names.iter() {
-        match schema.find_table(name) {
-            Some(index) => {
-                refs.push(TableRef {
-                    table_index: index
-                });
-            },
-            None => {
-                return Err(format!("Table {} not found", name))
-            }
-        }
+        refs.push(TableRef {
+            table_index: try!(schema.find_table_or_err(name))
+        });
     }
     Ok(refs)
 }
@@ -44,8 +37,8 @@ fn find_column_references(column_names: &[String], table_refs: &[TableRef], sche
     #[derive(Clone)]
     struct ColumnTableMappings {
         table_ref_index: usize,
-        column_index: usize,
-        column_name: String
+        index: usize,
+        name: String
     };
 
 
@@ -59,8 +52,8 @@ fn find_column_references(column_names: &[String], table_refs: &[TableRef], sche
         for (column_index, ref column_def) in table_columns.iter().enumerate() {
             all_columns.push(ColumnTableMappings {
                 table_ref_index: table_ref_index,
-                column_index: column_index,
-                column_name: column_def.name.to_owned()
+                index: column_index,
+                name: column_def.name.to_owned()
             });
         }
 
@@ -70,15 +63,15 @@ fn find_column_references(column_names: &[String], table_refs: &[TableRef], sche
     let mut column_refs = Vec::new();
     for column_name in column_names.iter() {
         let mut all_columns_iter = all_columns.iter();
-        match all_columns_iter.find(|&c| {c.column_name == *column_name}) {
+        match all_columns_iter.find(|&c| {c.name == *column_name}) {
             Some(matched_col) => {
-                match all_columns_iter.find(|&c| {c.column_name == *column_name}) {
+                match all_columns_iter.find(|&c| {c.name == *column_name}) {
                     Some(_) => {
                         return Err(format!("Ambiguous column {}", column_name));
                     },
                     None => {
                         column_refs.push(ColumnRef{
-                            column_index: matched_col.column_index,
+                            column_index: matched_col.index,
                             table_ref_index: matched_col.table_ref_index
                             });
                     }
@@ -98,7 +91,7 @@ fn find_column_references(column_names: &[String], table_refs: &[TableRef], sche
 //
 // }
 //
-pub fn insert_from_stmt(stmt: &InsertStmt, schema: &Schema) -> SqlError<InsertIr> {
+pub fn ir_from_insert_stmt(stmt: &InsertStmt, schema: &Schema) -> SqlError<InsertIr> {
     let table_refs = try!(find_table_references(&vec![stmt.table_name.to_owned()][..],schema));
     let column_refs = try!(find_column_references(&stmt.column_names, &table_refs[..], schema));
     Ok(InsertIr {

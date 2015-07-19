@@ -37,7 +37,7 @@ impl Schema {
                     closure(table)
                 },
                 None => {
-                    Err(format!("Internal Error: Table index {} doesn't exist", index))
+                    Err(format!("Internal Error: Table index {} doesn't exist in map_on_table_mut", index))
                 }
             }
     }
@@ -49,7 +49,7 @@ impl Schema {
                     closure(table)
                 },
                 None => {
-                    Err(format!("Internal Error: Table index {} doesn't exist", index))
+                    Err(format!("Internal Error: Table index {} doesn't exist in map_on_table", index))
                 }
             }
     }
@@ -66,21 +66,14 @@ impl Schema {
 
     }
 
-    pub fn drop_table(&mut self, table_name: &String) -> SqlError<()> {
-        match self.find_table(table_name) {
-            Some(table_index) => {
-                match self.names.get_mut(table_index) {
-                    Some(t) => {
-                        *t = None;
-                        Ok(())
-                    },
-                    None => {
-                        panic!("schema::drop_table - find_table returned an index for a table, but that index doesn't exist in names")
-                    }
-                }
+    pub fn drop_table(&mut self, index: usize) -> SqlError<()> {
+        match self.names.get_mut(index) {
+            Some(t) => {
+                *t = None;
+                Ok(())
             },
             None => {
-                Err(format!("Table {} does not exist", table_name))
+                Err(format!("Internal Error: Table index {} doesn't exist in drop_table", index))
             }
         }
     }

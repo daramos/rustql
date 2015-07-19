@@ -69,7 +69,7 @@ impl SqlEngine {
 
     fn insert(&mut self,stmt: InsertStmt) -> SqlError<()> {
         let ir = try!(ir_from_insert_stmt(&stmt, &self.schema));
-        let mut plan = try!(build_insert_plan(&ir, &self.schema));
+        let mut plan = try!(insert::build_insert_plan(&ir, &self.schema));
         let _ = try!(plan.run(&mut self.schema));
 
         Ok(())

@@ -1,6 +1,9 @@
 use definitions::*;
 use schema::*;
 
+pub mod select_ir;
+pub mod insert_ir;
+
 pub struct TableRef {
     pub table_index: usize
 }
@@ -8,18 +11,6 @@ pub struct TableRef {
 pub struct ColumnRef {
     pub column_index: usize,
     pub table_ref_index: usize
-}
-
-
-pub struct SelectIr {
-    pub columns: Vec<ColumnRef>,
-    pub tables: Vec<TableRef>
-}
-
-pub struct InsertIr {
-    pub values: Vec<LiteralValue>,
-    pub table: TableRef,
-    pub columns: Vec<ColumnRef>
 }
 
 fn resolve_table_references(table_names: &[String], schema: &Schema) -> SqlError<Vec<TableRef>> {
@@ -84,34 +75,4 @@ fn resolve_column_references(column_names: &[String], table_refs: &[TableRef], s
     }
 
     Ok(column_refs)
-}
-
-
-// pub fn select_from_ast(ast: SelectStmt) -> SqlResult<SelectIr> {
-//
-// }
-//
-pub fn ir_from_insert_stmt(stmt: &InsertStmt, schema: &Schema) -> SqlError<InsertIr> {
-    // First lets ensure that the columns listed are not duplicated
-    let mut col_names_deduped = stmt.column_names.clone();
-    col_names_deduped.sort_by(|a,b| a.cmp(b));
-    col_names_deduped.dedup();
-    if stmt.column_names.len() != col_names_deduped.len() {
-        return Err("Duplicated column names in insert statement".to_string());
-    }
-
-    // Now lets resolve all the table and column references
-    let table_refs = try!(resolve_table_references(&vec![stmt.table_name.to_owned()][..],schema));
-    let column_refs = try!(resolve_column_references(&stmt.column_names, &table_refs[..], schema));
-    if stmt.column_values.len() < stmt.column_names.len() {
-        return Err("Not enough values".to_string());
-    }
-    else if stmt.column_values.len() > stmt.column_names.len() {
-        return Err("Too many values".to_string());
-    }
-    Ok(InsertIr {
-        columns: column_refs,
-        table: try!(table_refs.into_iter().next().ok_or("Internal Error: insert_from_stmt".to_string())),
-        values: stmt.column_values.clone()
-    })
 }

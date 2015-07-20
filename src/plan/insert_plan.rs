@@ -28,7 +28,7 @@ impl InsertPlan {
     }
 }
 
-pub fn build_insert_plan(insert_ir: &InsertIr, schema: &Schema) -> SqlError<InsertPlan> {
+pub fn build_insert_plan(insert_ir: &insert_ir::InsertIr, schema: &Schema) -> SqlError<InsertPlan> {
 
     // First convert what might potentially be a partial row into a full one by
     // making all the absent columns NULLs

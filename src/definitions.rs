@@ -80,21 +80,16 @@ pub struct FunctionCall {
 
 #[derive(Debug,Clone,PartialEq)]
 pub struct SelectStmt {
-    pub projection: SelectProjection,
+    pub projection: Vec<SelectProjectionColumn>,
     pub from: Vec<SelectFromTable>,
     pub filter: Vec<SelectWhereFilter>
 }
 
 #[derive(Debug,Clone,PartialEq)]
-pub enum SelectProjection {
-    Columns(Vec<SelectProjectionColumn>),
-    Wildcard
-}
-
-#[derive(Debug,Clone,PartialEq)]
 pub enum SelectProjectionColumn {
     Named(String),
-    LiteralValue(LiteralValue)
+    LiteralValue(LiteralValue),
+    Wildcard
 }
 
 

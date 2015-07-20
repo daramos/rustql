@@ -8,7 +8,7 @@ pub mod tests {
     fn parser_select() {
         // Base test
         let mut stmt = SelectStmt {
-            projection: SelectProjection::Wildcard,
+            projection: vec![SelectProjectionColumn::Wildcard],
             from: vec![SelectFromTable::NamedTable("dual".to_string())],
             filter: vec![]
         };
@@ -18,7 +18,7 @@ pub mod tests {
         where_stmt.filter = vec![SelectWhereFilter::ColumnLiteral("dummy".to_string(),Comparator::Equals,LiteralValue::Text("X".to_string()))];
         assert_eq!(sql_expression("SELECT * FROM DUAL WHERE dummy = 'X'"), Ok(SqlStmt::Select(where_stmt)));
 
-        stmt.projection = SelectProjection::Columns(vec![SelectProjectionColumn::Named("my_column1".to_string()),SelectProjectionColumn::Named("my_column2".to_string())]);
+        stmt.projection = vec![SelectProjectionColumn::Named("my_column1".to_string()),SelectProjectionColumn::Named("my_column2".to_string())];
         assert_eq!(sql_expression("SELECT my_column1,my_column2 FROM DUAL"), Ok(SqlStmt::Select(stmt.clone())));
 
         stmt.from = vec![SelectFromTable::Function(

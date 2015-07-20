@@ -3,7 +3,7 @@ use definitions::*;
 use schema::*;
 use std::mem::replace;
 
-pub mod insert;
+pub mod insert_plan;
 
 struct FullTableScan {
     table_name: String,

@@ -66,18 +66,14 @@ select_stmt -> SelectStmt
 dump_tables_stmt
     = DUMP __ TABLES
 
-select_projection_clause -> SelectProjection
-    = "*"
-        { SelectProjection::Wildcard }
-    / c:(select_projection_column ++ list_separator)
-        { SelectProjection::Columns(c) }
+select_projection_clause -> Vec<SelectProjectionColumn>
+    = (select_projection_column ++ list_separator)
 
 select_projection_column -> SelectProjectionColumn
-    = /*l:literal_value
+    = l:literal_value
         { SelectProjectionColumn::LiteralValue(l) }
-    /*/ c: valid_identifier
-        { SelectProjectionColumn::Named(c) }
-
+    / n:valid_identifier { SelectProjectionColumn::Named(n) }
+    / "*" { SelectProjectionColumn::Wildcard }
 
 select_from_clause -> Vec<SelectFromTable>
     =  (select_from_identifier ++ list_separator)

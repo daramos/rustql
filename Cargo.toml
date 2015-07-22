@@ -1,13 +1,12 @@
 [package]
 
-name = "csvsql"
+name = "rustql"
 version = "0.0.1"
 authors = ["Daniel Ramos <dan@daramos.com>"]
 
 
 
 [dependencies]
-simple_csv = "^0"
 bit-vec = "^0"
 
 [dependencies.peg]

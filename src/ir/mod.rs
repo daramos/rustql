@@ -4,24 +4,23 @@ use schema::*;
 pub mod select_ir;
 pub mod insert_ir;
 
+#[derive(Debug,Clone,PartialEq)]
 pub struct TableRef {
     pub table_index: usize
 }
 
+#[derive(Debug,Clone,PartialEq)]
 pub struct ColumnRef {
     pub column_index: usize,
     pub table_ref_index: usize
 }
 
-fn resolve_table_references(table_names: &[String], schema: &Schema) -> SqlError<Vec<TableRef>> {
-    let mut refs = Vec::new();
+fn resolve_table_reference(table_name: &str, schema: &Schema) -> SqlError<TableRef> {
 
-    for name in table_names.iter() {
-        refs.push(TableRef {
-            table_index: try!(schema.find_table_or_err(name))
-        });
-    }
-    Ok(refs)
+    Ok(
+        TableRef {
+            table_index: try!(schema.find_table_or_err(table_name))
+        })
 }
 
 fn resolve_column_references(column_names: &[String], table_refs: &[TableRef], schema: &Schema) -> SqlError<Vec<ColumnRef>> {

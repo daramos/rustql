@@ -1,6 +1,6 @@
 use definitions::*;
 use schema::*;
-use super::{TableRef,ColumnRef,resolve_table_references,resolve_column_references};
+use super::{TableRef,ColumnRef,resolve_table_reference,resolve_column_references};
 
 pub struct InsertIr {
     pub values: Vec<LiteralValue>,
@@ -25,13 +25,13 @@ pub fn ir_from_insert_stmt(stmt: &InsertStmt, schema: &Schema) -> SqlError<Inser
         return Err("Too many values".to_string());
     }
 
-    // Now lets resolve all the table and column references
-    let table_refs = try!(resolve_table_references(&vec![stmt.table_name.to_owned()][..],schema));
-    let column_refs = try!(resolve_column_references(&stmt.column_names, &table_refs[..], schema));
+    // Now lets resolve the table and column references
+    let table_ref = try!(resolve_table_reference(&stmt.table_name,schema));
+    let column_refs = try!(resolve_column_references(&stmt.column_names, &vec![table_ref.clone()], schema));
 
     Ok(InsertIr {
         columns: column_refs,
-        table: try!(table_refs.into_iter().next().ok_or("Internal Error: insert_from_stmt".to_string())),
+        table: table_ref,
         values: stmt.column_values.clone()
     })
 }

@@ -75,3 +75,19 @@ fn resolve_column_references(column_names: &[String], table_refs: &[TableRef], s
 
     Ok(column_refs)
 }
+
+fn resolve_column_wildcard(table_ref: &TableRef, table_ref_index: usize, schema: &Schema) -> SqlError<Vec<ColumnRef>> {
+    let mut column_refs = Vec::new();
+    let table_columns =
+        try!(schema.map_on_table(table_ref.table_index, |table| {
+            Ok(table.columns().to_owned())
+        }));
+    for (column_index, _) in table_columns.iter().enumerate() {
+        column_refs.push(ColumnRef {
+            table_ref_index: table_ref_index,
+            column_index: column_index
+        });
+    }
+    Ok(column_refs)
+
+}

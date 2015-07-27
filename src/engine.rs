@@ -42,7 +42,8 @@ impl SqlEngine {
     }
 
     fn select(&mut self,stmt: SelectStmt) -> SqlError<Vec<Vec<LiteralValue>>> {
-        let mut plan = try!(build_select_plan(&stmt, &mut self.schema));
+        let ir = try!(select_ir::ir_from_select_stmt(&stmt, &self.schema));
+        let mut plan = try!(select_plan::build_select_plan(&ir, &self.schema));
         let row = try!(plan.get_next_row(&mut self.schema));
 
         println!("{:?}",&row);

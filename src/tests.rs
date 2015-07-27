@@ -61,8 +61,16 @@ pub mod tests {
         assert!(engine.excecute_stmt(sql_expression("INSERT INTO ABC(COL1) VALUES (TRUE,FALSE)").unwrap()).is_err());
         assert!(engine.excecute_stmt(sql_expression("INSERT INTO ABC(COL1,COL1) VALUES (TRUE,FALSE)").unwrap()).is_err());
 
-        let result = engine.excecute_stmt(sql_expression("SELECT * FROM ABC").unwrap()).unwrap();
-        let expected_result = SqlResult::Rows(vec![vec![LiteralValue::Bool(true), LiteralValue::Bool(false)]]);
+        let mut result = engine.excecute_stmt(sql_expression("SELECT * FROM ABC").unwrap()).unwrap();
+        let mut expected_result = SqlResult::Rows(vec![vec![LiteralValue::Bool(true), LiteralValue::Bool(false)]]);
+        assert_eq!(result,expected_result);
+
+        result = engine.excecute_stmt(sql_expression("SELECT COL1 FROM ABC").unwrap()).unwrap();
+        expected_result = SqlResult::Rows(vec![vec![LiteralValue::Bool(true)]]);
+        assert_eq!(result,expected_result);
+
+        result = engine.excecute_stmt(sql_expression("SELECT COL2 FROM ABC").unwrap()).unwrap();
+        expected_result = SqlResult::Rows(vec![vec![LiteralValue::Bool(false)]]);
         assert_eq!(result,expected_result);
 
     }

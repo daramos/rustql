@@ -1,5 +1,4 @@
 use definitions::*;
-use  std::ascii::OwnedAsciiExt;
 #[pub]
 
 sql_expression -> SqlStmt
@@ -112,7 +111,7 @@ function_argument -> FunctionArgument
     / i:valid_identifier { FunctionArgument::Identifier(i) }
 
 valid_identifier -> String
-    = [a-zA-Z][0-9a-zA-Z_]* { match_str.to_string().into_ascii_lowercase() }
+    = [a-zA-Z][0-9a-zA-Z_]* { match_str.to_lowercase() }
 
 
 literal_value -> LiteralValue

@@ -1,4 +1,4 @@
-#![feature(plugin,drain,owned_ascii_ext)]
+#![feature(plugin,drain)]
 #![plugin(peg_syntax_ext)]
 #![allow(dead_code)]
 
